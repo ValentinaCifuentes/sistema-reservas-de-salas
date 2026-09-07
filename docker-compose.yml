@@ -1,0 +1,111 @@
+version: "3.8"
+
+services:
+  # ============================================================
+  # SERVICIOS DE LA APLICACIÓN
+  # ============================================================
+  reservations:
+    build:
+      context: ./reservations
+      dockerfile: Dockerfile
+    container_name: reservations-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3001/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    networks:
+      - reservas-network
+
+  user-portal:
+    build:
+      context: ./user-portal
+      dockerfile: Dockerfile
+    container_name: user-portal-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=production
+      - RESERVATIONS_SERVICE_URL=http://reservations:3001
+    depends_on:
+      - reservations
+    networks:
+      - reservas-network
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: admin-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - NODE_ENV=production
+      - RESERVATIONS_SERVICE_URL=http://reservations:3001
+    depends_on:
+      - reservations
+    networks:
+      - reservas-network
+
+  # ============================================================
+  # CONTENEDORES DE PRUEBAS DE CONTRATO (PACT)
+  # ============================================================
+  user-portal-test:
+    profiles: ["test"]
+    build:
+      context: ./user-portal
+      dockerfile: Dockerfile
+    container_name: user-portal-test
+    command: ["npm", "test"]
+    volumes:
+      - ./pacts:/app/pacts
+    networks:
+      - reservas-network
+
+  admin-test:
+    profiles: ["test"]
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: admin-test
+    command: ["npm", "test"]
+    volumes:
+      - ./pacts:/app/pacts
+    networks:
+      - reservas-network
+
+  reservations-verifier:
+    profiles: ["test"]
+    build:
+      context: ./reservations
+      dockerfile: Dockerfile
+    container_name: reservations-verifier
+    command: ["npm", "run", "test:pact"]
+    environment:
+      - PACT_PROVIDER_URL=http://reservations:3001
+    volumes:
+      - ./pacts:/app/pacts
+    depends_on:
+      reservations:
+        condition: service_healthy
+      user-portal-test:
+        condition: service_completed_successfully
+      admin-test:
+        condition: service_completed_successfully
+    networks:
+      - reservas-network
+
+networks:
+  reservas-network:
+    name: sistema-reservas-network
+    driver: bridge
