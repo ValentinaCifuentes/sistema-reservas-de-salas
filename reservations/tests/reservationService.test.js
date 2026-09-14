@@ -1,4 +1,4 @@
-const { crearReserva } = require("../src/reservationService");
+const { crearReserva, consultarReservasPorUsuario, verificarReserva } = require("../src/reservationService");
 const repository = require("../src/reservationRepository");
 
 describe("Servicio de Reservas - Crear Reserva", () => {
@@ -75,8 +75,8 @@ describe("Servicio de Reservas - Crear Reserva", () => {
 
     expect(r1.reserva.id).not.toBe(r2.reserva.id);
   });
-}
-);
+});
+
 describe("Servicio de Reservas - Consultar Reservas", () => {
   beforeEach(() => {
     repository.reset();
@@ -103,5 +103,30 @@ describe("Servicio de Reservas - Consultar Reservas", () => {
 
     expect(resultado.exito).toBe(false);
     expect(resultado.error).toBe("Debe indicar un usuario para consultar sus reservas");
+  });
+});
+
+describe("Servicio de Reservas - Verificar Reserva", () => {
+  beforeEach(() => {
+    repository.reset();
+  });
+
+  it("debe indicar que una reserva activa es válida", () => {
+    repository.insertar({
+      id: "R-1001",
+      usuarioId: "U100",
+      sala: "SALA-1",
+      fecha: "2026-10-01",
+      horas: 2,
+      estado: "activa",
+    });
+
+    const resultado = verificarReserva("R-1001");
+    expect(resultado.valida).toBe(true);
+  });
+
+  it("debe indicar que una reserva inexistente no es válida", () => {
+    const resultado = verificarReserva("R-9999");
+    expect(resultado.valida).toBe(false);
   });
 });
