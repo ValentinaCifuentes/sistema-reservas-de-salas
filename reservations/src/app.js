@@ -1,5 +1,5 @@
 const express = require("express");
-const { crearReserva, consultarReservasPorUsuario } = require("./reservationService");
+const { crearReserva, consultarReservasPorUsuario, verificarReserva } = require("./reservationService");
 
 const app = express();
 app.use(express.json());
@@ -30,16 +30,35 @@ app.post("/reservas", (req, res) => {
   return res.status(201).json(resultado.reserva);
 });
 
-app.get ("/reservas", (req, res) => {
-  const {usuario} =req.query;
+/**
+ * GET /reservas?usuario={usuarioId} - Consultar reservas de un usuario.
+ *
+ * Respuestas:
+ *  200 - Lista de reservas (puede ser vacía []).
+ *  400 - Falta el parámetro usuario.
+ */
+app.get("/reservas", (req, res) => {
+  const { usuario } = req.query;
 
   const resultado = consultarReservasPorUsuario(usuario);
 
-  if (!resultado.exito){
-    return res.status(400).json({error: resultado.error});
+  if (!resultado.exito) {
+    return res.status(400).json({ error: resultado.error });
   }
 
   return res.status(200).json(resultado.reservas);
+});
+
+/**
+ * GET /reservas/:id/verificar - Verificar si una reserva existe y está activa.
+ *
+ * Respuestas:
+ *  200 - { valida: true/false }
+ */
+app.get("/reservas/:id/verificar", (req, res) => {
+  const { id } = req.params;
+  const resultado = verificarReserva(id);
+  return res.status(200).json(resultado);
 });
 
 module.exports = app;
