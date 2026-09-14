@@ -46,4 +46,19 @@ function consultarReservasPorUsuario(usuarioId) {
   return {exito: true, reservas};
 }
 
-module.exports = { crearReserva, consultarReservasPorUsuario };
+/**
+ * Verifica si una reserva existe y está activa.
+ * @param {string} id - Identificador de la reserva (ej. R-1001).
+ * @returns {Object} { valida: boolean }
+ */
+function verificarReserva(id) {
+  const reserva = repository.obtenerPorId(id);
+
+  if (reserva && reserva.estado === "activa") {
+    return { valida: true };
+  }
+
+  return { valida: false };
+}
+
+module.exports = { crearReserva, consultarReservasPorUsuario, verificarReserva };

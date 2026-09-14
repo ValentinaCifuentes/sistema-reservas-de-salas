@@ -41,4 +41,21 @@ function buscarPorUsuario(usuarioId) {
   return Object.values(reservas).filter((r) => r.usuarioId === usuarioId);
 }
 
-module.exports = { reset, crear, buscarPorUsuario };
+/**
+ * Busca una reserva por su identificador.
+ * @param {string} id - Identificador de la reserva (ej. R-1001).
+ * @returns {Object|undefined} La reserva encontrada o undefined.
+ */
+function obtenerPorId(id) {
+  return reservas[id];
+}
+
+/**
+ * Inserta una reserva directamente (para preparar estados de prueba).
+ * @param {Object} reserva - Reserva completa con id, estado, etc.
+ */
+function insertar(reserva) {
+  reservas[reserva.id] = reserva;
+}
+
+module.exports = { reset, crear, buscarPorUsuario, obtenerPorId, insertar };
