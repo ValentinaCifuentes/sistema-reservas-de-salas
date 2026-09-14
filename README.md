@@ -6,7 +6,7 @@ Este proyecto implementa un sistema distribuido para la reserva de salas académ
 
 ## 🏛️ Arquitectura del Sistema
 
-El sistema está compuesto por **tres servicios independientes**:
+El sistema está compuesto por **tres microservicios independientes**:
 
 ```
                               ┌────────────────────────┐
@@ -16,7 +16,7 @@ El sistema está compuesto por **tres servicios independientes**:
                                           │ Contrato 2: Consultar reservas
                                           ▼
 ┌────────────────────────┐    Contrato 1: Crear reserva    ┌────────────────────────┐
-│  App / Portal Cliente  ├────────────────────────────────►│  Servicio de Reservas  │
+│  Portal / App Usuario  ├────────────────────────────────►│  Servicio de Reservas  │
 │      (Consumidor)      │                                 │  (PROVEEDOR / :3001)   │
 └────────────────────────┘                                 └───────────▲────────────┘
                                                                        │
@@ -27,13 +27,13 @@ El sistema está compuesto por **tres servicios independientes**:
                                             Contrato 3: Verificar reserva
 ```
 
-### Servicios
+### Microservicios y Roles
 
 | Servicio | Directorio | Rol Pact | Puerto | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| **Servicio de Reservas** | `reservations/` | **Proveedor (Provider)** | `3001` | Almacena y gestiona reservas, procesa creaciones, consultas por usuario y verificaciones de estado. |
-| **Portal de Usuario** | `user-portal/` | **Consumidor (Consumer)** | `3002` | Permite a los usuarios consultar sus reservas activas e históricas. |
-| **Servicio de Administración** | `admin/` | **Consumidor (Consumer)** | `3003` | Permite a los administradores comprobar si una reserva específica existe y se encuentra activa. |
+| **Servicio de Reservas** | `reservations/` | **Proveedor (Provider)** | `3001` | Servicio central. Almacena y gestiona las reservas, procesa creaciones, consultas por usuario y verificaciones de estado. |
+| **Portal de Usuario** | `user-portal/` | **Consumidor (Consumer)** | `3002` | Permite a los usuarios crear nuevas reservas y consultar sus reservas registradas. |
+| **Servicio de Administración** | `admin/` | **Consumidor (Consumer)** | `3003` | Permite a administradores comprobar si una reserva específica existe y se encuentra activa. |
 
 ---
 
@@ -42,44 +42,154 @@ El sistema está compuesto por **tres servicios independientes**:
 ### 1. Crear una Reserva (`POST /reservas`)
 - **Parámetros de entrada**: `usuarioId`, `sala`, `fecha`, `horas`.
 - **Reglas de negocio**:
-  - Si `horas > 0`, se registra la reserva, se le asigna un identificador único (ej. `R-1001`) y el estado `activa`. Respuesta: `201 Created`.
-  - Si `horas <= 0`, la solicitud es rechazada informando que la cantidad de horas es inválida. Respuesta: `400 Bad Request`.
+  - Si `horas > 0`: Se registra la reserva, se le asigna un identificador único (ej. `R-1001`) y el estado `activa`. Retorna código `201 Created`.
+  - Si `horas <= 0`: La solicitud es rechazada informando que la cantidad de horas es inválida. Retorna código `400 Bad Request`.
 
 ### 2. Consultar Reservas de un Usuario (`GET /reservas?usuario={usuarioId}`)
-- Si el usuario posee reservas activas (ej. `U100`), se retorna la lista con los detalles de cada reserva (`200 OK`).
-- Si el usuario no registra reservas (ej. `U200`), se retorna una lista vacía `[]` de forma exitosa (`200 OK`), sin considerarlo un error.
+- Si el usuario posee reservas activas (ej. `U100`), se retorna la lista con los detalles de cada reserva con código `200 OK`.
+- Si el usuario no registra reservas (ej. `U200`), se retorna una lista vacía `[]` con código `200 OK` (no se considera un error).
 
 ### 3. Verificar una Reserva (`GET /reservas/{id}/verificar`)
-- Si la reserva existe y está activa (ej. `R-1001`), se responde que la reserva es válida (`valida: true`).
-- Si la reserva no existe o no se encuentra activa, se responde que la reserva no es válida (`valida: false`).
+- Si la reserva existe y está activa (ej. `R-1001`), se responde que la reserva es válida (`{"valida": true}`).
+- Si la reserva no existe o se encuentra inactiva (ej. `R-9999`), se responde que la reserva no es válida (`{"valida": false}`).
 
 ---
 
-## 🤝 Pruebas de Contrato (Pact)
+## 🚀 Cómo Levantar el Sistema
 
-Las pruebas de contrato se definen desde la perspectiva de los consumidores y se generan automáticamente en la carpeta `./pacts`.
+El sistema se encuentra completamente contenerizado mediante **Docker Compose**, lo que permite iniciar los tres servicios con sus respectivas dependencias y configuraciones de red.
 
-### Contratos a implementar:
+### 1. Iniciar todos los servicios
+Desde la raíz del repositorio, ejecutar:
+```bash
+docker compose up -d --build
+```
 
-1. **Contrato 1 (Creación de Reserva $\rightarrow$ Servicio de Reservas)**:
-   - **Caso Válido**: Creación con horas válidas ($> 0$), respuesta con ID y estado activo.
-   - **Caso Inválido**: Creación con 0 horas o negativo, rechazo con mensaje de error.
+Esto compilará las imágenes de cada servicio y los levantará en segundo plano:
+- **Servicio de Reservas**: Disponible en `http://localhost:3001`
+- **Portal de Usuario**: Disponible en `http://localhost:3002`
+- **Servicio de Administración**: Disponible en `http://localhost:3003`
+
+### 2. Comprobar el estado y verificar endpoints
+Para revisar que los contenedores estén corriendo normalmente:
+```bash
+docker compose ps
+```
+
+También es posible comprobar el estado de salud (_healthcheck_) de cada servicio:
+```bash
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health
+```
+Todos responderán `{"status":"ok"}`.
+
+### 3. Monitorear logs de los servicios
+```bash
+docker compose logs -f
+```
+
+### 4. Detener los servicios
+```bash
+docker compose down
+```
+
+---
+
+## 🧪 Pruebas de Contrato (Pact)
+
+En el enfoque **Consumer-Driven Contracts (CDC)**, los servicios consumidores definen las expectativas de la API (rutas, cabeceras, payloads y respuestas esperadas) mediante pruebas automatizadas.
+
+### Contratos Definidos en el Sistema:
+
+1. **Contrato 1 (Portal de Usuario $\rightarrow$ Servicio de Reservas)**:
+   - **Caso Válido**: Creación con horas válidas ($> 0$), respuesta `201 Created` con identificador generado y estado `activa`.
+   - **Caso Inválido**: Creación con 0 horas o negativo, rechazo con `400 Bad Request` y mensaje de error descriptivo.
 
 2. **Contrato 2 (Portal de Usuario $\rightarrow$ Servicio de Reservas)**:
-   - **Caso Usuario con Reservas**: Usuario `U100` recibe arreglo con reservas activas.
-   - **Caso Usuario sin Reservas**: Usuario `U200` recibe arreglo vacío `[]`.
+   - **Caso Usuario con Reservas**: Usuario `U100` recibe arreglo con sus reservas activas (`200 OK`).
+   - **Caso Usuario sin Reservas**: Usuario `U200` recibe un arreglo vacío `[]` (`200 OK`).
 
 3. **Contrato 3 (Servicio de Administración $\rightarrow$ Servicio de Reservas)**:
-   - **Caso Reserva Existente**: Reserva `R-1001` confirmada como válida.
-   - **Caso Reserva Inexistente**: Reserva desconocida identificada como no válida.
+   - **Caso Reserva Existente**: Reserva `R-1001` confirmada como válida (`valida: true`, `200 OK`).
+   - **Caso Reserva Inexistente**: Identificador desconocido evaluado como no válido (`valida: false`, `200 OK`).
 
-### Preparación de Estados del Proveedor (Provider States)
-El Servicio de Reservas implementa un endpoint de soporte de estados para garantizar la reproducibilidad de las pruebas:
-- `el usuario U100 posee una reserva activa`
-- `el usuario U200 no posee ninguna reserva`
-- `la reserva R-1001 existe y se encuentra activa`
-- `una determinada reserva no existe`
-- `el sistema esta preparado para crear una nueva reserva valida`
+---
+
+## 📝 Cómo Ejecutar las Pruebas de los Consumidores y Generar los Contratos Pact
+
+Las pruebas de los consumidores se ejecutan contra un **Mock Server** generado localmente por Pact. Durante su ejecución exitosa, Pact **genera automáticamente los contratos en formato JSON** en el directorio `./pacts/`.
+
+> ⚠️ **Importante**: Los archivos de contrato dentro de `./pacts/` **nunca deben editarse a mano**. Son generados y versionados de manera determinista a partir del código de pruebas de los consumidores.
+
+### 1. Ejecutar pruebas del Portal de Usuario (Contratos 1 y 2)
+```bash
+cd user-portal
+npm test
+```
+Esto ejecutará Jest sobre `tests/contract/crearReserva.pact.test.js` y `tests/contract/consultarReserva.pact.test.js`, generando el archivo:
+- `./pacts/PortalUsuario-ServicioReservas.json`
+
+### 2. Ejecutar pruebas del Servicio de Administración (Contrato 3)
+```bash
+cd ../admin
+npm test
+```
+Esto ejecutará Jest sobre `tests/contract/verificarReserva.pact.test.js`, generando el archivo:
+- `./pacts/ServicioAdministracion-ServicioReservas.json`
+
+---
+
+## 🔍 Cómo Verificar el Servicio de Reservas (Proveedor)
+
+Una vez que los contratos han sido generados por los consumidores en `./pacts/`, el **Servicio de Reservas (Proveedor)** debe validar que su implementación real cumple estrictamente con todas las expectativas pactadas.
+
+### 1. Preparación de Estados del Proveedor (*Provider States*)
+Para garantizar pruebas reproducibles y deterministas, el archivo de verificación del proveedor (`reservations/tests/contract/provider.pact.test.js`) configura *state handlers* que inicializan los datos requeridos en memoria antes de cada interacción:
+- `el sistema esta preparado para crear una nueva reserva valida`: Reinicia el repositorio para recibir una nueva reserva.
+- `el usuario U100 posee una reserva activa`: Inicializa una reserva activa asociada al usuario `U100`.
+- `el usuario U200 no posee ninguna reserva`: Asegura que el usuario `U200` no cuente con reservas previas.
+- `la reserva R-1001 existe y se encuentra activa`: Registra la reserva `R-1001` con estado `activa`.
+- `una determinada reserva no existe`: Limpia el repositorio asegurando que el identificador consultado no exista.
+
+### 2. Ejecutar la verificación del Proveedor
+Desde el directorio del servicio proveedor:
+```bash
+cd reservations
+npm run test:pact
+```
+O para ejecutar tanto los tests unitarios como la verificación de contratos:
+```bash
+npm test
+```
+
+Pact levantará el servicio real de Express, reproducirá cada petición definida en los archivos JSON de `./pacts`, ejecutará los *state handlers* correspondientes y validará los códigos de estado, encabezados y payloads de respuesta. Se mostrará un reporte detallado con las 6 interacciones verificadas exitosamente.
+
+---
+
+## ⚠️ Principales Dificultades Encontradas durante el Desarrollo
+
+Durante la realización e integración del sistema se presentaron los siguientes desafíos técnicos:
+
+1. **Inversión de perspectiva con Consumer-Driven Contracts (CDC)**:
+   - *Dificultad*: A diferencia de las pruebas de integración tradicionales donde el proveedor expone su API y los consumidores se adaptan, en Pact el consumidor impone los requisitos sobre qué datos y formatos necesita.
+   - *Solución*: Se diseñaron primero los contratos desde las necesidades reales de `user-portal` y `admin`, definiendo las interacciones exactas antes de implementar o ajustar los endpoints finales en el proveedor.
+
+2. **Gestión determinista de los Estados del Proveedor (*Provider States*)**:
+   - *Dificultad*: El proveedor debe responder fielmente ante casos específicos (ej. usuario con reservas vs. sin reservas, reserva existente vs. inexistente). Si las pruebas dependen de una base de datos con estado mutable acumulado, las pruebas fallan o se vuelven intermitentes (*flaky tests*).
+   - *Solución*: Se implementaron funciones de reinicio e inserción controlada (`reset`, `insertar`) en `reservationRepository.js` acopladas a los `stateHandlers` en `provider.pact.test.js`, garantizando un estado limpio y aislado por cada interacción evaluada.
+
+3. **Uso adecuado de Matchers flexibles vs. Valores exactos**:
+   - *Dificultad*: Acoplar las pruebas a valores rígidos (como IDs autoincrementales exactos) provoca fallos si la lógica del proveedor genera identificadores dinámicos (ej. `R-1001`, `R-1002`).
+   - *Solución*: Se emplearon los matchers de Pact (`MatchersV3` como `regex("R-\\d+", "R-1001")`, `like(...)` y `eachLike(...)`), permitiendo verificar la estructura y tipos de datos esperados sin restringir valores no esenciales.
+
+4. **Orquestación de microservicios y contenedorización con Docker**:
+   - *Dificultad*: En microservicios distribuidos, los contenedores consumidores requieren conocer la URL del proveedor según el entorno (`localhost` en pruebas locales vs. `http://reservations:3001` dentro de la red Docker bridge). Además, los contenedores fallaban si no disponían de un servidor HTTP activo como punto de entrada (`src/index.js`).
+   - *Solución*: Se crearon servidores HTTP dedicados en cada consumidor (`src/index.js`) con soporte de variables de entorno (`RESERVATIONS_SERVICE_URL`, `PORT`), y se añadieron archivos `.dockerignore` para evitar que las carpetas `node_modules` locales del host interfirieran con el build de los contenedores Alpine.
+
+5. **Dependencias y binarios nativos de Pact**:
+   - *Dificultad*: Pact utiliza un motor subyacente de alto rendimiento escrito en Rust (`pact-core`), el cual descarga binarios nativos para la arquitectura del sistema operativo.
+   - *Solución*: Se unificó el entorno de desarrollo y ejecución de pruebas dentro de contenedores basados en Node 20 / Linux con glibc y compatibilidad de herramientas para garantizar una ejecución fluida de los mock servers y del verificador.
 
 ---
 
@@ -87,67 +197,39 @@ El Servicio de Reservas implementa un endpoint de soporte de estados para garant
 
 ```text
 sistema-reservas-de-salas/
-├── README.md                     # Documentación general del proyecto
-├── docker-compose.yml            # Orquestación completa de los 3 servicios
-├── pacts/                        # Directorio donde se generan los contratos Pact
+├── README.md                     # Documentación completa del proyecto
+├── docker-compose.yml            # Orquestación de los 3 microservicios
+├── .dockerignore                 # Exclusión de archivos para construcción Docker
+├── pacts/                        # Contratos generados automáticamente por Pact
+│   ├── PortalUsuario-ServicioReservas.json
+│   └── ServicioAdministracion-ServicioReservas.json
 ├── reservations/                 # Servicio de Reservas (Proveedor)
-│   ├── Dockerfile                # Imagen Docker del servicio
+│   ├── Dockerfile
 │   ├── package.json
-│   └── src/
+│   ├── src/
+│   │   ├── index.js              # Arranque del servidor HTTP (puerto 3001)
+│   │   ├── app.js                # Definición de rutas y middleware Express
+│   │   ├── reservationService.js # Lógica de negocio y validaciones
+│   │   └── reservationRepository.js # Almacenamiento en memoria con soporte de estados
+│   └── tests/
+│       ├── reservationService.test.js # Pruebas unitarias
+│       └── contract/
+│           └── provider.pact.test.js  # Verificación Pact del Proveedor
 ├── user-portal/                  # Portal de Usuario (Consumidor)
-│   ├── Dockerfile                # Imagen Docker del servicio
+│   ├── Dockerfile
 │   ├── package.json
-│   └── tests/contract/           # Pruebas Pact del consumidor
+│   ├── src/
+│   │   ├── index.js              # Servidor HTTP para despliegue Docker (puerto 3002)
+│   │   └── reservationClient.js  # Cliente HTTP hacia el Servicio de Reservas
+│   └── tests/contract/
+│       ├── crearReserva.pact.test.js     # Contrato 1: Crear Reserva
+│       └── consultarReserva.pact.test.js # Contrato 2: Consultar Reservas
 └── admin/                        # Servicio de Administración (Consumidor)
-    ├── Dockerfile                # Imagen Docker del servicio
+    ├── Dockerfile
     ├── package.json
-    └── tests/contract/           # Pruebas Pact del consumidor
-```
-
----
-
-## 🚀 Despliegue con Docker
-
-Para compilar y levantar todos los servicios juntos en segundo plano:
-
-```bash
-docker compose up -d --build
-```
-
-Para ver los logs de los servicios:
-```bash
-docker compose logs -f
-```
-
-Para detener los servicios:
-```bash
-docker compose down
-```
-
-También es posible levantar o reconstruir un servicio específico desde la raíz:
-```bash
-docker compose up -d --build reservations
-docker compose up -d --build user-portal
-docker compose up -d --build admin
-```
-
----
-
-## 🧪 Ejecución del Flujo de Pruebas de Contrato
-
-### 1. Generar contratos Pact (Lado Consumidores)
-Ejecutar las suites de pruebas en los servicios consumidores para generar los archivos en `./pacts`:
-```bash
-# Portal de Usuario
-cd user-portal && npm test
-
-# Servicio de Administración
-cd ../admin && npm test
-```
-
-### 2. Verificar contratos contra el Proveedor Real
-Con los contratos generados en `./pacts` y el Servicio de Reservas activo:
-```bash
-cd reservations
-npm run test:pact
+    ├── src/
+    │   ├── index.js              # Servidor HTTP para despliegue Docker (puerto 3003)
+    │   └── reservationClient.js  # Cliente HTTP hacia el Servicio de Reservas
+    └── tests/contract/
+        └── verificarReserva.pact.test.js # Contrato 3: Verificar Reserva
 ```
