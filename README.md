@@ -118,24 +118,36 @@ En el enfoque **Consumer-Driven Contracts (CDC)**, los servicios consumidores de
 
 ## 📝 Cómo Ejecutar las Pruebas de los Consumidores y Generar los Contratos Pact
 
-Las pruebas de los consumidores se ejecutan contra un **Mock Server** generado localmente por Pact. Durante su ejecución exitosa, Pact **genera automáticamente los contratos en formato JSON** en el directorio `./pacts/`.
+Las pruebas de los consumidores se ejecutan contra un **Mock Server** generado automáticamente por Pact. Durante su ejecución exitosa, Pact **genera automáticamente los contratos en formato JSON** en el directorio `./pacts/`.
 
 > ⚠️ **Importante**: Los archivos de contrato dentro de `./pacts/` **nunca deben editarse a mano**. Son generados y versionados de manera determinista a partir del código de pruebas de los consumidores.
 
-### 1. Ejecutar pruebas del Portal de Usuario (Contratos 1 y 2)
+Existen dos formas de ejecutar estas pruebas:
+
+### Opción A: Con los contenedores Docker levantados (`docker compose exec`)
+Si el sistema ya fue iniciado con `docker compose up -d`, se pueden disparar las pruebas directamente dentro de los contenedores en ejecución:
+
 ```bash
+# 1. Ejecutar pruebas en Portal de Usuario (genera contratos 1 y 2)
+docker compose exec user-portal npm test
+
+# 2. Ejecutar pruebas en Servicio de Administración (genera contrato 3)
+docker compose exec admin npm test
+```
+
+### Opción B: En el entorno local de desarrollo
+```bash
+# 1. Portal de Usuario (genera contratos 1 y 2)
 cd user-portal
 npm test
-```
-Esto ejecutará Jest sobre `tests/contract/crearReserva.pact.test.js` y `tests/contract/consultarReserva.pact.test.js`, generando el archivo:
-- `./pacts/PortalUsuario-ServicioReservas.json`
 
-### 2. Ejecutar pruebas del Servicio de Administración (Contrato 3)
-```bash
+# 2. Servicio de Administración (genera contrato 3)
 cd ../admin
 npm test
 ```
-Esto ejecutará Jest sobre `tests/contract/verificarReserva.pact.test.js`, generando el archivo:
+
+Ambas opciones ejecutarán Jest y generarán los archivos de contrato en:
+- `./pacts/PortalUsuario-ServicioReservas.json`
 - `./pacts/ServicioAdministracion-ServicioReservas.json`
 
 ---
@@ -153,14 +165,17 @@ Para garantizar pruebas reproducibles y deterministas, el archivo de verificaci�
 - `una determinada reserva no existe`: Limpia el repositorio asegurando que el identificador consultado no exista.
 
 ### 2. Ejecutar la verificación del Proveedor
-Desde el directorio del servicio proveedor:
+
+#### Con el contenedor Docker levantado:
+```bash
+docker compose exec reservations npm run test:pact
+```
+
+#### O en el entorno local:
 ```bash
 cd reservations
-npm run test:pact
-```
-O para ejecutar tanto los tests unitarios como la verificación de contratos:
-```bash
-npm test
+npm run test:pact   # Solo verificación de contratos Pact
+npm test            # Tests unitarios + contratos Pact
 ```
 
 Pact levantará el servicio real de Express, reproducirá cada petición definida en los archivos JSON de `./pacts`, ejecutará los *state handlers* correspondientes y validará los códigos de estado, encabezados y payloads de respuesta. Se mostrará un reporte detallado con las 6 interacciones verificadas exitosamente.

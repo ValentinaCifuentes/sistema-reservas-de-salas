@@ -20,6 +20,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
+    volumes:
+      - ./pacts:/pacts:z
     networks:
       - reservas-network
 
@@ -37,6 +39,8 @@ services:
       - RESERVATIONS_SERVICE_URL=http://reservations:3001
     depends_on:
       - reservations
+    volumes:
+      - ./pacts:/pacts:z
     networks:
       - reservas-network
 
@@ -54,6 +58,8 @@ services:
       - RESERVATIONS_SERVICE_URL=http://reservations:3001
     depends_on:
       - reservations
+    volumes:
+      - ./pacts:/pacts:z
     networks:
       - reservas-network
 
@@ -68,7 +74,7 @@ services:
     container_name: user-portal-test
     command: ["npm", "test"]
     volumes:
-      - ./pacts:/app/pacts
+      - ./pacts:/pacts:z
     networks:
       - reservas-network
 
@@ -80,7 +86,7 @@ services:
     container_name: admin-test
     command: ["npm", "test"]
     volumes:
-      - ./pacts:/app/pacts
+      - ./pacts:/pacts:z
     networks:
       - reservas-network
 
@@ -94,7 +100,7 @@ services:
     environment:
       - PACT_PROVIDER_URL=http://reservations:3001
     volumes:
-      - ./pacts:/app/pacts
+      - ./pacts:/pacts:z
     depends_on:
       reservations:
         condition: service_healthy
