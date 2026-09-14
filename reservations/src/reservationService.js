@@ -29,4 +29,21 @@ function crearReserva(datos) {
   return { exito: true, reserva };
 }
 
-module.exports = { crearReserva };
+/**
+ * Consulta las reservas de un usuario.
+ * @param {string} usuarioId
+ * @returns {Object} { exito: boolean, reservas?, error? }
+ */
+function consultarReservasPorUsuario(usuarioId) {
+  if (!usuarioId){
+    return {
+      exito: false,
+      error: "Debe indicar un usuario para consultar sus reservas"
+    };
+  }
+
+  const reservas = repository.buscarPorUsuario(usuarioId);
+  return {exito: true, reservas};
+}
+
+module.exports = { crearReserva, consultarReservasPorUsuario };
