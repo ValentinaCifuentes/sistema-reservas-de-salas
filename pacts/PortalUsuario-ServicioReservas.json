@@ -4,6 +4,124 @@
   },
   "interactions": [
     {
+      "description": "una solicitud de reservas para U100",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "el usuario U100 posee una reserva activa"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/reservas",
+        "query": {
+          "usuario": [
+            "U100"
+          ]
+        }
+      },
+      "response": {
+        "body": {
+          "content": [
+            {
+              "estado": "activa",
+              "fecha": "2026-10-01",
+              "horas": 2,
+              "id": "R-1001",
+              "sala": "SALA-1",
+              "usuarioId": "U100"
+            }
+          ],
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$[*].fecha": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[*].horas": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[*].sala": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      },
+      "type": "Synchronous/HTTP"
+    },
+    {
+      "description": "una solicitud de reservas para U200",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "el usuario U200 no posee ninguna reserva"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/reservas",
+        "query": {
+          "usuario": [
+            "U200"
+          ]
+        }
+      },
+      "response": {
+        "body": {
+          "content": [],
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "status": 200
+      },
+      "type": "Synchronous/HTTP"
+    },
+    {
       "description": "una solicitud para crear una reserva con horas inválidas",
       "pending": false,
       "providerStates": [
