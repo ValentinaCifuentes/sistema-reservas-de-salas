@@ -1,5 +1,5 @@
 const express = require("express");
-const { crearReserva } = require("./reservationService");
+const { crearReserva, consultarReservasPorUsuario } = require("./reservationService");
 
 const app = express();
 app.use(express.json());
@@ -28,6 +28,18 @@ app.post("/reservas", (req, res) => {
   }
 
   return res.status(201).json(resultado.reserva);
+});
+
+app.get ("/reservas", (req, res) => {
+  const {usuario} =req.query;
+
+  const resultado = consultarReservasPorUsuario(usuario);
+
+  if (!resultado.exito){
+    return res.status(400).json({error: resultado.error});
+  }
+
+  return res.status(200).json(resultado.reservas);
 });
 
 module.exports = app;
