@@ -1,0 +1,21 @@
+{
+  "name": "user-portal",
+  "version": "1.0.0",
+  "description": "Portal de Usuario - Consumidor del Servicio de Reservas",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest --verbose tests/contract/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.20.0"
+  },
+  "devDependencies": {
+    "@pact-foundation/pact": "^17.1.4",
+    "jest": "^30.5.1"
+  }
+}
