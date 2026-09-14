@@ -19,4 +19,21 @@ async function crearReserva(datos, baseUrl) {
   return response.data;
 }
 
-module.exports = { crearReserva };
+
+/**
+ * Consulta las reservas de un usuario en el Servicio de Reservas.
+ * @param {string} usuarioId
+ * @param {string} [baseUrl]
+ * @returns {Promise<Array>} Lista de reservas.
+ */
+async function consultarReservas(usuarioId, baseUrl) {
+  const url = baseUrl || DEFAULT_BASE_URL;
+  const response = await axios.get(`${url}/reservas`, {
+    params: { usuario: usuarioId },
+  });
+  return response.data;
+}
+
+module.exports = { crearReserva, consultarReservas };
+
+
