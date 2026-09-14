@@ -41,13 +41,4 @@ function buscarPorUsuario(usuarioId) {
   return Object.values(reservas).filter((r) => r.usuarioId === usuarioId);
 }
 
-/**
- * Retorna todas las reservas de un usuario determinado.
- * @param {string} usuarioId
- * @returns {Array} Lista de reservas (vacía si no tiene ninguna).
- */
-function buscarPorUsuario(usuarioId) {
-  return Object.values(reservas).filter((r) => r.usuarioId === usuarioId);
-}
-
 module.exports = { reset, crear, buscarPorUsuario };
