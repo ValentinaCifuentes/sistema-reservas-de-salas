@@ -25,6 +25,10 @@ describe("Verificación del Proveedor - Servicio de Reservas", () => {
           __dirname,
           "../../../pacts/PortalUsuario-ServicioReservas.json"
         ),
+        path.resolve(
+          __dirname,
+          "../../../pacts/ServicioAdministracion-ServicioReservas.json"
+        ),
       ],
       stateHandlers: {
         "el sistema esta preparado para crear una nueva reserva valida": () => {
@@ -42,6 +46,22 @@ describe("Verificación del Proveedor - Servicio de Reservas", () => {
           return Promise.resolve();
         },
         "el usuario U200 no posee ninguna reserva": () => {
+          repository.reset();
+          return Promise.resolve();
+        },
+        "la reserva R-1001 existe y se encuentra activa": () => {
+          repository.reset();
+          repository.insertar({
+            id: "R-1001",
+            usuarioId: "U100",
+            sala: "SALA-1",
+            fecha: "2026-10-01",
+            horas: 2,
+            estado: "activa",
+          });
+          return Promise.resolve();
+        },
+        "una determinada reserva no existe": () => {
           repository.reset();
           return Promise.resolve();
         },
