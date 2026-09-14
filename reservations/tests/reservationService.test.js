@@ -75,4 +75,33 @@ describe("Servicio de Reservas - Crear Reserva", () => {
 
     expect(r1.reserva.id).not.toBe(r2.reserva.id);
   });
+}
+);
+describe("Servicio de Reservas - Consultar Reservas", () => {
+  beforeEach(() => {
+    repository.reset();
+  });
+
+  it("debe retornar las reservas de un usuario", () => {
+    repository.crear({ usuarioId: "U100", sala: "SALA-1", fecha: "2026-10-01", horas: 2 });
+
+    const resultado = consultarReservasPorUsuario("U100");
+
+    expect(resultado.exito).toBe(true);
+    expect(resultado.reservas.length).toBe(1);
+  });
+
+  it("debe retornar una lista vacía si el usuario no tiene reservas", () => {
+    const resultado = consultarReservasPorUsuario("U200");
+
+    expect(resultado.exito).toBe(true);
+    expect(resultado.reservas).toEqual([]);
+  });
+
+  it("debe rechazar la consulta si no se indica usuario", () => {
+    const resultado = consultarReservasPorUsuario(undefined);
+
+    expect(resultado.exito).toBe(false);
+    expect(resultado.error).toBe("Debe indicar un usuario para consultar sus reservas");
+  });
 });
