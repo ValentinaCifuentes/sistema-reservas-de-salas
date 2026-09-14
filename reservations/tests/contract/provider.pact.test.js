@@ -31,6 +31,20 @@ describe("Verificación del Proveedor - Servicio de Reservas", () => {
           repository.reset();
           return Promise.resolve();
         },
+        "el usuario U100 posee una reserva activa": () => {
+          repository.reset();
+          repository.crear({
+            usuarioId: "U100",
+            sala: "SALA-1",
+            fecha: "2026-10-01",
+            horas: 2,
+          });
+          return Promise.resolve();
+        },
+        "el usuario U200 no posee ninguna reserva": () => {
+          repository.reset();
+          return Promise.resolve();
+        },
       },
     };
 
