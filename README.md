@@ -2,6 +2,8 @@
 
 Este proyecto implementa un sistema distribuido para la reserva de salas académicas por parte de estudiantes y docentes, validando la comunicación y compatibilidad entre microservicios mediante **pruebas de contrato orientadas por el consumidor (Consumer-Driven Contracts)** utilizando [Pact](https://docs.pact.io/).
 
+[Video demostracion](https://drive.google.com/file/d/1NgaM4XzFUohNB39nSE8WJzRCW4idfwat/view?usp=sharing)
+
 ---
 
 ## 🏛️ Arquitectura del Sistema
