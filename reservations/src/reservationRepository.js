@@ -1,15 +1,16 @@
 /**
  * Repositorio en memoria para las reservas.
+ * Implementado con Map para prevenir colisiones de prototipo y mejorar rendimiento.
  */
 
-let reservas = {};
+const reservas = new Map();
 let nextId = 1001;
 
 /**
  * Reinicia el repositorio (para pruebas).
  */
 function reset() {
-  reservas = {};
+  reservas.clear();
   nextId = 1001;
 }
 
@@ -28,8 +29,8 @@ function crear(datos) {
     horas: datos.horas,
     estado: "activa",
   };
-  reservas[id] = reserva;
-  return reserva;
+  reservas.set(id, reserva);
+  return { ...reserva };
 }
 
 /**
@@ -38,7 +39,13 @@ function crear(datos) {
  * @returns {Array} Lista de reservas (vacía si no tiene ninguna).
  */
 function buscarPorUsuario(usuarioId) {
-  return Object.values(reservas).filter((r) => r.usuarioId === usuarioId);
+  const resultado = [];
+  for (const reserva of reservas.values()) {
+    if (reserva.usuarioId === usuarioId) {
+      resultado.push({ ...reserva });
+    }
+  }
+  return resultado;
 }
 
 /**
@@ -47,7 +54,8 @@ function buscarPorUsuario(usuarioId) {
  * @returns {Object|undefined} La reserva encontrada o undefined.
  */
 function obtenerPorId(id) {
-  return reservas[id];
+  const reserva = reservas.get(id);
+  return reserva ? { ...reserva } : undefined;
 }
 
 /**
@@ -55,7 +63,8 @@ function obtenerPorId(id) {
  * @param {Object} reserva - Reserva completa con id, estado, etc.
  */
 function insertar(reserva) {
-  reservas[reserva.id] = reserva;
+  reservas.set(reserva.id, { ...reserva });
 }
 
 module.exports = { reset, crear, buscarPorUsuario, obtenerPorId, insertar };
+

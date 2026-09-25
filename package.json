@@ -1,0 +1,26 @@
+{
+  "name": "sistema-reservas-de-salas",
+  "version": "1.0.0",
+  "description": "Sistema distribuido de reservas de salas universitarias con Consumer-Driven Contracts (Pact)",
+  "private": true,
+  "workspaces": [
+    "reservations",
+    "user-portal",
+    "admin"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces",
+    "test:unit": "npm test --workspace=reservations",
+    "test:contracts": "npm test --workspace=user-portal && npm test --workspace=admin && npm run test:pact --workspace=reservations",
+    "test:pact": "npm run test:pact --workspace=reservations"
+  },
+  "keywords": [
+    "pact",
+    "cdc",
+    "microservices",
+    "jest",
+    "contract-testing"
+  ],
+  "author": "",
+  "license": "ISC"
+}

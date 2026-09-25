@@ -76,6 +76,7 @@ describe("Contrato 1: Crear Reserva", () => {
         });
       })
       .executeTest(async (mockServer) => {
+        let thrownError;
         try {
           await crearReserva(
             {
@@ -86,13 +87,16 @@ describe("Contrato 1: Crear Reserva", () => {
             },
             mockServer.url
           );
-          fail("Debería haber lanzado un error");
         } catch (error) {
-          expect(error.response.status).toBe(400);
-          expect(error.response.data.error).toBe(
-            "La cantidad de horas es inválida"
-          );
+          thrownError = error;
         }
+
+        expect(thrownError).toBeDefined();
+        expect(thrownError.response?.status).toBe(400);
+        expect(thrownError.response?.data?.error).toBe(
+          "La cantidad de horas es inválida"
+        );
       });
   });
 });
+

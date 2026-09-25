@@ -1,7 +1,8 @@
 const axios = require("axios");
 
 const DEFAULT_BASE_URL =
-  process.env.RESERVATIONS_SERVICE_URL || "http://localhost:3001";
+  (process.env.RESERVATIONS_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
+const DEFAULT_TIMEOUT_MS = 10000;
 
 /**
  * Cliente HTTP para comunicarse con el Servicio de Reservas.
@@ -14,11 +15,12 @@ const DEFAULT_BASE_URL =
  * @returns {Promise<Object>} Respuesta del servicio.
  */
 async function crearReserva(datos, baseUrl) {
-  const url = baseUrl || DEFAULT_BASE_URL;
-  const response = await axios.post(`${url}/reservas`, datos);
+  const url = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
+  const response = await axios.post(`${url}/reservas`, datos, {
+    timeout: DEFAULT_TIMEOUT_MS,
+  });
   return response.data;
 }
-
 
 /**
  * Consulta las reservas de un usuario en el Servicio de Reservas.
@@ -27,13 +29,15 @@ async function crearReserva(datos, baseUrl) {
  * @returns {Promise<Array>} Lista de reservas.
  */
 async function consultarReservas(usuarioId, baseUrl) {
-  const url = baseUrl || DEFAULT_BASE_URL;
+  const url = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
   const response = await axios.get(`${url}/reservas`, {
     params: { usuario: usuarioId },
+    timeout: DEFAULT_TIMEOUT_MS,
   });
   return response.data;
 }
 
 module.exports = { crearReserva, consultarReservas };
+
 
 

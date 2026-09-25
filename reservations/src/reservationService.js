@@ -11,14 +11,27 @@ const repository = require("./reservationRepository");
  * @returns {Object} { exito: boolean, reserva?, error? }
  */
 function crearReserva(datos) {
-  if (!datos.horas || datos.horas <= 0) {
+  if (!datos || typeof datos !== "object") {
+    return {
+      exito: false,
+      error: "Faltan datos obligatorios para la reserva",
+    };
+  }
+
+  if (typeof datos.horas !== "number" || Number.isNaN(datos.horas) || datos.horas <= 0) {
     return {
       exito: false,
       error: "La cantidad de horas es inválida",
     };
   }
 
-  if (!datos.usuarioId || !datos.sala || !datos.fecha) {
+  if (
+    !datos.usuarioId ||
+    typeof datos.usuarioId !== "string" ||
+    !datos.usuarioId.trim() ||
+    !datos.sala ||
+    !datos.fecha
+  ) {
     return {
       exito: false,
       error: "Faltan datos obligatorios para la reserva",
@@ -35,15 +48,15 @@ function crearReserva(datos) {
  * @returns {Object} { exito: boolean, reservas?, error? }
  */
 function consultarReservasPorUsuario(usuarioId) {
-  if (!usuarioId){
+  if (!usuarioId || typeof usuarioId !== "string" || !usuarioId.trim()) {
     return {
       exito: false,
-      error: "Debe indicar un usuario para consultar sus reservas"
+      error: "Debe indicar un usuario para consultar sus reservas",
     };
   }
 
-  const reservas = repository.buscarPorUsuario(usuarioId);
-  return {exito: true, reservas};
+  const reservas = repository.buscarPorUsuario(usuarioId.trim());
+  return { exito: true, reservas };
 }
 
 /**
@@ -52,7 +65,11 @@ function consultarReservasPorUsuario(usuarioId) {
  * @returns {Object} { valida: boolean }
  */
 function verificarReserva(id) {
-  const reserva = repository.obtenerPorId(id);
+  if (!id || typeof id !== "string") {
+    return { valida: false };
+  }
+
+  const reserva = repository.obtenerPorId(id.trim());
 
   if (reserva && reserva.estado === "activa") {
     return { valida: true };
@@ -62,3 +79,4 @@ function verificarReserva(id) {
 }
 
 module.exports = { crearReserva, consultarReservasPorUsuario, verificarReserva };
+

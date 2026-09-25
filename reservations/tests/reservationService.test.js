@@ -59,6 +59,42 @@ describe("Servicio de Reservas - Crear Reserva", () => {
     expect(resultado.error).toBe("Faltan datos obligatorios para la reserva");
   });
 
+  it("debe rechazar una reserva sin datos o con payload nulo", () => {
+    const resultado = crearReserva(null);
+    expect(resultado.exito).toBe(false);
+    expect(resultado.error).toBe("Faltan datos obligatorios para la reserva");
+  });
+
+  it("debe rechazar una reserva si horas no es un número", () => {
+    const resultado = crearReserva({
+      usuarioId: "U100",
+      sala: "SALA-1",
+      fecha: "2026-10-01",
+      horas: "dos",
+    });
+
+    expect(resultado.exito).toBe(false);
+    expect(resultado.error).toBe("La cantidad de horas es inválida");
+  });
+
+  it("debe rechazar una reserva si falta sala o fecha", () => {
+    const sinSala = crearReserva({
+      usuarioId: "U100",
+      fecha: "2026-10-01",
+      horas: 2,
+    });
+    expect(sinSala.exito).toBe(false);
+    expect(sinSala.error).toBe("Faltan datos obligatorios para la reserva");
+
+    const sinFecha = crearReserva({
+      usuarioId: "U100",
+      sala: "SALA-1",
+      horas: 2,
+    });
+    expect(sinFecha.exito).toBe(false);
+    expect(sinFecha.error).toBe("Faltan datos obligatorios para la reserva");
+  });
+
   it("debe generar ids únicos para cada reserva", () => {
     const r1 = crearReserva({
       usuarioId: "U100",
@@ -104,6 +140,13 @@ describe("Servicio de Reservas - Consultar Reservas", () => {
     expect(resultado.exito).toBe(false);
     expect(resultado.error).toBe("Debe indicar un usuario para consultar sus reservas");
   });
+
+  it("debe rechazar la consulta si el usuario es una cadena vacía o solo espacios", () => {
+    const resultado = consultarReservasPorUsuario("   ");
+
+    expect(resultado.exito).toBe(false);
+    expect(resultado.error).toBe("Debe indicar un usuario para consultar sus reservas");
+  });
 });
 
 describe("Servicio de Reservas - Verificar Reserva", () => {
@@ -129,4 +172,10 @@ describe("Servicio de Reservas - Verificar Reserva", () => {
     const resultado = verificarReserva("R-9999");
     expect(resultado.valida).toBe(false);
   });
+
+  it("debe indicar no válida si el id es nulo o inválido", () => {
+    expect(verificarReserva(null).valida).toBe(false);
+    expect(verificarReserva("").valida).toBe(false);
+  });
 });
+
