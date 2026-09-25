@@ -1,7 +1,8 @@
 const axios = require("axios");
 
 const DEFAULT_BASE_URL =
-  process.env.RESERVATIONS_SERVICE_URL || "http://localhost:3001";
+  (process.env.RESERVATIONS_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
+const DEFAULT_TIMEOUT_MS = 10000;
 
 /**
  * Cliente HTTP para comunicarse con el Servicio de Reservas
@@ -15,9 +16,13 @@ const DEFAULT_BASE_URL =
  * @returns {Promise<Object>} { valida: boolean }
  */
 async function verificarReserva(reservaId, baseUrl) {
-  const url = baseUrl || DEFAULT_BASE_URL;
-  const response = await axios.get(`${url}/reservas/${reservaId}/verificar`);
+  const url = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
+  const encodedId = encodeURIComponent(reservaId);
+  const response = await axios.get(`${url}/reservas/${encodedId}/verificar`, {
+    timeout: DEFAULT_TIMEOUT_MS,
+  });
   return response.data;
 }
 
 module.exports = { verificarReserva };
+

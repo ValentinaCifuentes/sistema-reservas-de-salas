@@ -148,9 +148,12 @@ cd ../admin
 npm test
 ```
 
+> 💡 **Tip (Workspace raíz)**: Gracias a la configuración de workspaces en el `package.json` de la raíz, también puedes ejecutar todo el flujo con `npm run test:contracts` o correr todas las suites con `npm test` directamente desde la raíz del proyecto.
+
 Ambas opciones ejecutarán Jest y generarán los archivos de contrato en:
 - `./pacts/PortalUsuario-ServicioReservas.json`
 - `./pacts/ServicioAdministracion-ServicioReservas.json`
+
 
 ---
 
